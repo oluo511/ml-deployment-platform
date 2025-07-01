@@ -1,0 +1,46 @@
+# DEPLOYMENT = Instructions for running containers
+apiVersion: apps/v1          # Kubernetes version to use
+kind: Deployment             # Type of thing we're creating 
+metadata:
+  name: house-price-api      
+  labels:
+    app: house-price-api     # Tag it so we can reference it later
+spec:
+  replicas: 1                # Run 1 copy of the container (could be 5 for scaling)
+  selector:
+    matchLabels:
+      app: house-price-api   # Which containers this deployment manages
+  template:                  # Template for creating containers
+    metadata:
+      labels:
+        app: house-price-api # Label each container
+    spec:
+      containers:            # List of containers to run
+      - name: house-price-api          # Container name
+        image: house-price-api:latest  # Use our Docker image we built
+        ports:
+        - containerPort: 5001          
+        resources:                     # How much CPU/memory to give container
+          requests:                    # Minimum resources needed
+            memory: "256Mi"            # At least 256MB RAM
+            cpu: "250m"                # At least 0.25 CPU cores
+          limits:                      # Maximum resources allowed
+            memory: "512Mi"            # Max 512MB RAM
+            cpu: "500m"                # Max 0.5 CPU cores
+
+---                          # Separator between YAML documents
+
+# SERVICE = Creates a fixed address to reach your containers
+# Containers get random IP addresses, Service provides a stable name/port
+apiVersion: v1               # Different API version for Services
+kind: Service                # Type of thing we're creating 
+metadata:
+  name: house-price-service  # Name this service
+spec:
+  selector:
+    app: house-price-api     # Connect to containers with this label
+  ports:
+    - protocol: TCP          # Use TCP protocol
+      port: 5001             # Port to connect to
+      targetPort: 5001       # Port where Flask actually runs inside container
+  type: LoadBalancer         # Allows people to test and access 
