@@ -1,0 +1,43 @@
+apiVersion: apps/v1          # Kubernetes API version (not your app version)
+kind: Deployment             # Type of Kubernetes resource - manages pods
+                             # Pod means running container(s)
+metadata:
+  name: streamlit-frontend   # Name of this deployment (what you'll see in kubectl get deployments)
+spec:
+  replicas: 1                # More replicas = high availability, load distribution
+                             # If one pod crashes, others keep serving users
+                             # For production: 3+ replicas, for demo: 1 is fine                
+  selector:
+    matchLabels:
+      app: streamlit-frontend # This deployment manages pods with this label
+  template:                  
+    metadata:
+      labels:
+        app: streamlit-frontend # Label each pod gets (matches selector above)
+                                # Like a name tag so the deployment can find its pods
+    spec:
+      containers:            # List of containers in each pod
+      - name: streamlit-frontend       # Container name (for logs, debugging)
+        image: streamlit-platform:latest # Docker image to use
+        imagePullPolicy: Never         # Never = use local image only
+                                       # Other options: Always (download from registry)
+                                       #               IfNotPresent (download if not local)
+        ports:
+        - containerPort: 8501          # Port the app listens on inside container
+
+---                          # Separator between YAML documents
+
+apiVersion: v1               # Different API version for Services
+kind: Service                # Creates a stable network endpoint for pods
+metadata:
+  name: streamlit-service    # Service name (other apps use this to connect)
+spec:
+  selector:
+    app: streamlit-frontend  # Connect to pods with this label
+                             # Service automatically finds matching pods
+  ports:
+  - port: 8501               # External port (what clients connect to)
+    targetPort: 8501         # Internal port (where container is listening)
+  type: LoadBalancer         # Makes service accessible from outside Kubernetes
+                             # Other types: ClusterIP (internal only)
+                             #              NodePort (accessible via node IP:port)

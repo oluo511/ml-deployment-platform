@@ -18,6 +18,7 @@ spec:
       containers:            # List of containers to run
       - name: house-price-api          # Container name
         image: house-price-api:latest  # Use our Docker image we built
+        imagePullPolicy: Never         # Force Kubernetes to use local image
         ports:
         - containerPort: 5001          
         resources:                     # How much CPU/memory to give container
